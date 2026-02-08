@@ -130,6 +130,7 @@
         }
 
         /* Hero Section */
+       /* --- RESET & BASIC HERO LAYOUT --- */
         header {
             min-height: 80vh;
             display: flex;
@@ -139,63 +140,113 @@
             text-align: center;
             position: relative;
             padding: 40px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            background: linear-gradient(to bottom, rgba(5, 5, 8, .1) 40%, var(--bg-deep) 50%, transparent 80%, transparent 100%);
-            
-            /* NEW: Prepares the 3D stage and prevents image edges from showing */
             overflow: hidden;
-            perspective: 1000px;
+            perspective: 1500px;
+            background: var(--bg-deep);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        /* --- THE COLOR MORPHER (BEFORE) --- */
+        /* Scaled to 1000% to create a slow, massive movement of color */
+        header::before {
+            content: "";
+            position: absolute;
+            top: -500%; left: -500%;
+            width: 1000%; height: 1000%;
+            z-index: -1;
+            background: radial-gradient(circle at center, 
+                var(--accent-violet), 
+                var(--accent-cyan), 
+                var(--accent-crimson), 
+                var(--bg-deep));
+            background-size: 20% 20%;
+            animation: color-morph 40s linear infinite;
+            mix-blend-mode: hard-light;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* --- THE NEBULA IMAGE (BASE) --- */
         .hero-img {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
             z-index: -2;
-            opacity: 1;
-            
-            /* Keep your existing mask */
-            mask-image: linear-gradient(to bottom, black 30%, transparent 50%, black 80%, transparent 100%), radial-gradient(circle at top right, black, 100%, transparent 100%), radial-gradient(circle at top left, black 100%, transparent 100%);
-            mask-composite: intersect;
-            
-            /* NEW: Zoom in slightly to allow movement, and smooth out the motion */
-            transform: scale(1.1);
-            transition: transform 0.1s ease-out;
+            opacity: 0.8;
+            /* Constant breathing/rotating animation */
+            animation: nebula-float 60s ease-in-out infinite alternate;
             will-change: transform;
-        }
-        
-        .header-box {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
             
-            /* NEW: Smooth movement for the text layer */
-            transition: transform 0.1s ease-out;
-            will-change: transform;
-            z-index: 10;
-        }
-        
-        .header-box::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            z-index: -1;
-            border-radius: 20px;
-            box-shadow: 0px 0px 10px 10px rgba(5, 5, 8, .3);
-            padding: 20px 30px;
-            background: rgba(5, 5, 8, .3);
+            /* Masking to blend edges */
+            mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 90%);
         }
 
-        /* NEW: Mobile Drifting Animation (Since phones don't use mouse-move) */
-        @media (hover: none) and (pointer: coarse) {
-            .hero-img {
-                animation: cosmic-drift 20s infinite alternate ease-in-out;
+        /* --- THE LIGHT & SHADOW SHIFTER (AFTER) --- */
+        /* Shifts the light/dark portions of the nebula image */
+        header::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, 
+                transparent 20%, 
+                rgba(5, 5, 8, 0.8) 70%, 
+                var(--bg-deep) 100%);
+            background-size: 200% 200%;
+            animation: light-shift 25s ease-in-out infinite alternate;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+        }
+
+        /* --- ANIMATIONS --- */
+
+        /* Morphs the colors by rotating the massive 1000% gradient */
+        @keyframes color-morph {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Slow 3D rotation and scale for the nebula image */
+        @keyframes nebula-float {
+            0% { 
+                transform: scale(1.1) rotate3d(1, 1, 0, 0deg); 
+            }
+            50% { 
+                transform: scale(1.3) rotate3d(1, -1, 0, 5deg); 
+            }
+            100% { 
+                transform: scale(1.1) rotate3d(-1, 1, 0, -5deg); 
             }
         }
 
-        @keyframes cosmic-drift {
-            0% { transform: scale(1.1) translate(0, 0); }
-            100% { transform: scale(1.2) translate(-15px, -10px); }
+        /* Moves the "Spotlight" and shadows around the nebula */
+        @keyframes light-shift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 50% 0%; }
+        }
+
+        /* --- HEADER CONTENT BOX --- */
+        .header-box {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 800px;
+            /* Keep parallax transition but allow it to work with CSS animation */
+            transition: transform 0.2s ease-out;
+        }
+
+        .header-box::before {
+            content: "";
+            position: absolute;
+            top: -20px; left: -20px; right: -20px; bottom: -20px;
+            z-index: -1;
+            border-radius: 20px;
+            background: rgba(5, 5, 8, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
         }
 
         .subtitle {
@@ -664,37 +715,32 @@
         progressBar.style.width = '0%';
         timeDisplay.innerText = "00:00";
     });
-</script>
 <script>
-    // Parallax Effect Script
+    // Enhanced Parallax for Animated Nebula
     const header = document.querySelector('header');
     const heroImg = document.querySelector('.hero-img');
     const headerBox = document.querySelector('.header-box');
 
     header.addEventListener('mousemove', (e) => {
-        // Calculate distance from center of header
         const rect = header.getBoundingClientRect();
-        const x = e.clientX - rect.left - (rect.width / 2);
-        const y = e.clientY - rect.top - (rect.height / 2);
+        const x = (e.clientX - rect.left - (rect.width / 2)) / 30;
+        const y = (e.clientY - rect.top - (rect.height / 2)) / 30;
 
-        // Strength of the effect (Higher number = Slower movement)
-        const strengthImg = 25; 
-        const strengthText = 40; 
-
-        // Move Image (Background)
-        // We keep scale(1.1) to ensure edges don't show
-        heroImg.style.transform = `scale(1.1) translate(${x / strengthImg}px, ${y / strengthImg}px)`;
-
-        // Move Text (Foreground) in OPPOSITE direction for depth
-        headerBox.style.transform = `translate(${-x / strengthText}px, ${-y / strengthText}px)`;
+        // We use translateX/Y to offset the current CSS animation without breaking the scale/rotate3d
+        headerBox.style.transform = `translate(${-x}px, ${-y}px)`;
+        
+        // Note: For heroImg, the parallax is subtle because the CSS animation is the primary motion
+        heroImg.style.left = `${x}px`;
+        heroImg.style.top = `${y}px`;
     });
 
-    // Reset when mouse leaves to keep it centered
     header.addEventListener('mouseleave', () => {
-        heroImg.style.transform = 'scale(1.1) translate(0, 0)';
         headerBox.style.transform = 'translate(0, 0)';
+        heroImg.style.left = '0';
+        heroImg.style.top = '0';
     });
 </script>
+
 </script>
 </body>
 </html>
