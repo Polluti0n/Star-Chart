@@ -189,6 +189,42 @@
             backdrop-filter: blur(4px);
         }
 
+        /* 1. Set the stage for 3D effects */
+header {
+    /* Existing styles remain... */
+    overflow: hidden; /* Ensures the image doesn't poke out when moving */
+    perspective: 1000px; /* Creates the 3D depth field */
+}
+
+/* 2. Prepare the Image for Movement */
+.hero-img {
+    /* Existing styles... */
+    transition: transform 0.1s ease-out; /* Smooths out the mouse movement */
+    will-change: transform; /* Optimizes performance */
+    transform: scale(1.1); /* Zoom in slightly so edges don't show when moving */
+}
+
+/* 3. The Text Box "Floating" Effect */
+.header-box {
+    /* Existing styles... */
+    transition: transform 0.1s ease-out;
+    will-change: transform;
+    z-index: 10; /* Ensures it stays on top */
+}
+
+/* 4. Mobile Fallback: "Cosmic Drift" Animation 
+   (Since phones don't have a mouse, we use a slow auto-zoom instead) */
+@media (max-width: 768px) {
+    .hero-img {
+        animation: cosmic-drift 20s infinite alternate ease-in-out;
+    }
+}
+
+@keyframes cosmic-drift {
+    0% { transform: scale(1.1) translate(0, 0); }
+    100% { transform: scale(1.25) translate(-20px, -10px); }
+}
+
         /* Glass Cards */
         .card {
             background: var(--bg-card);
@@ -635,6 +671,29 @@
         playBtn.innerHTML = '<span class="icon">▶</span> <span class="label">REPLAY</span>';
         progressBar.style.width = '0%';
         timeDisplay.innerText = "00:00";
+    });
+</script>
+<script>
+    document.addEventListener('mousemove', (e) => {
+        const header = document.querySelector('header');
+        const img = document.querySelector('.hero-img');
+        const box = document.querySelector('.header-box');
+
+        // 1. Get mouse position relative to the center of the screen
+        const x = (window.innerWidth / 2 - e.pageX) / 25; // Change 25 to control speed (lower = faster)
+        const y = (window.innerHeight / 2 - e.pageY) / 25;
+
+        // 2. Apply the effect ONLY if we are currently looking at the header
+        // (Performance optimization)
+        const headerRect = header.getBoundingClientRect();
+        if (headerRect.bottom > 0) {
+            // Move Image slightly (Background layer)
+            img.style.transform = `scale(1.1) translateX(${x}px) translateY(${y}px)`;
+            
+            // Move Text Box slightly in the OPPOSITE direction (Foreground layer)
+            // This creates the "depth" separation
+            box.style.transform = `translateX(${-x * 0.5}px) translateY(${-y * 0.5}px)`;
+        }
     });
 </script>
 </body>
