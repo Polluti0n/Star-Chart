@@ -141,6 +141,10 @@
             padding: 40px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             background: linear-gradient(to bottom, rgba(5, 5, 8, .1) 40%, var(--bg-deep) 50%, transparent 80%, transparent 100%);
+            
+            /* NEW: Prepares the 3D stage and prevents image edges from showing */
+            overflow: hidden;
+            perspective: 1000px;
         }
 
         .hero-img {
@@ -149,14 +153,26 @@
             object-fit: cover;
             z-index: -2;
             opacity: 1;
+            
+            /* Keep your existing mask */
             mask-image: linear-gradient(to bottom, black 30%, transparent 50%, black 80%, transparent 100%), radial-gradient(circle at top right, black, 100%, transparent 100%), radial-gradient(circle at top left, black 100%, transparent 100%);
             mask-composite: intersect;
+            
+            /* NEW: Zoom in slightly to allow movement, and smooth out the motion */
+            transform: scale(1.1);
+            transition: transform 0.1s ease-out;
+            will-change: transform;
         }
         
         .header-box {
             position: relative;
             width: 100%;
             max-width: 800px;
+            
+            /* NEW: Smooth movement for the text layer */
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+            z-index: 10;
         }
         
         .header-box::before {
@@ -168,6 +184,18 @@
             box-shadow: 0px 0px 10px 10px rgba(5, 5, 8, .3);
             padding: 20px 30px;
             background: rgba(5, 5, 8, .3);
+        }
+
+        /* NEW: Mobile Drifting Animation (Since phones don't use mouse-move) */
+        @media (hover: none) and (pointer: coarse) {
+            .hero-img {
+                animation: cosmic-drift 20s infinite alternate ease-in-out;
+            }
+        }
+
+        @keyframes cosmic-drift {
+            0% { transform: scale(1.1) translate(0, 0); }
+            100% { transform: scale(1.2) translate(-15px, -10px); }
         }
 
         .subtitle {
@@ -188,43 +216,7 @@
             display: inline-block;
             backdrop-filter: blur(4px);
         }
-
-        /* 1. Set the stage for 3D effects */
-header {
-    /* Existing styles remain... */
-    overflow: hidden; /* Ensures the image doesn't poke out when moving */
-    perspective: 1000px; /* Creates the 3D depth field */
-}
-
-/* 2. Prepare the Image for Movement */
-.hero-img {
-    /* Existing styles... */
-    transition: transform 0.1s ease-out; /* Smooths out the mouse movement */
-    will-change: transform; /* Optimizes performance */
-    transform: scale(1.1); /* Zoom in slightly so edges don't show when moving */
-}
-
-/* 3. The Text Box "Floating" Effect */
-.header-box {
-    /* Existing styles... */
-    transition: transform 0.1s ease-out;
-    will-change: transform;
-    z-index: 10; /* Ensures it stays on top */
-}
-
-/* 4. Mobile Fallback: "Cosmic Drift" Animation 
-   (Since phones don't have a mouse, we use a slow auto-zoom instead) */
-@media (max-width: 768px) {
-    .hero-img {
-        animation: cosmic-drift 20s infinite alternate ease-in-out;
-    }
-}
-
-@keyframes cosmic-drift {
-    0% { transform: scale(1.1) translate(0, 0); }
-    100% { transform: scale(1.25) translate(-20px, -10px); }
-}
-
+        
         /* Glass Cards */
         .card {
             background: var(--bg-card);
@@ -674,27 +666,35 @@ header {
     });
 </script>
 <script>
-    document.addEventListener('mousemove', (e) => {
-        const header = document.querySelector('header');
-        const img = document.querySelector('.hero-img');
-        const box = document.querySelector('.header-box');
+    // Parallax Effect Script
+    const header = document.querySelector('header');
+    const heroImg = document.querySelector('.hero-img');
+    const headerBox = document.querySelector('.header-box');
 
-        // 1. Get mouse position relative to the center of the screen
-        const x = (window.innerWidth / 2 - e.pageX) / 25; // Change 25 to control speed (lower = faster)
-        const y = (window.innerHeight / 2 - e.pageY) / 25;
+    header.addEventListener('mousemove', (e) => {
+        // Calculate distance from center of header
+        const rect = header.getBoundingClientRect();
+        const x = e.clientX - rect.left - (rect.width / 2);
+        const y = e.clientY - rect.top - (rect.height / 2);
 
-        // 2. Apply the effect ONLY if we are currently looking at the header
-        // (Performance optimization)
-        const headerRect = header.getBoundingClientRect();
-        if (headerRect.bottom > 0) {
-            // Move Image slightly (Background layer)
-            img.style.transform = `scale(1.1) translateX(${x}px) translateY(${y}px)`;
-            
-            // Move Text Box slightly in the OPPOSITE direction (Foreground layer)
-            // This creates the "depth" separation
-            box.style.transform = `translateX(${-x * 0.5}px) translateY(${-y * 0.5}px)`;
-        }
+        // Strength of the effect (Higher number = Slower movement)
+        const strengthImg = 25; 
+        const strengthText = 40; 
+
+        // Move Image (Background)
+        // We keep scale(1.1) to ensure edges don't show
+        heroImg.style.transform = `scale(1.1) translate(${x / strengthImg}px, ${y / strengthImg}px)`;
+
+        // Move Text (Foreground) in OPPOSITE direction for depth
+        headerBox.style.transform = `translate(${-x / strengthText}px, ${-y / strengthText}px)`;
     });
+
+    // Reset when mouse leaves to keep it centered
+    header.addEventListener('mouseleave', () => {
+        heroImg.style.transform = 'scale(1.1) translate(0, 0)';
+        headerBox.style.transform = 'translate(0, 0)';
+    });
+</script>
 </script>
 </body>
 </html>
